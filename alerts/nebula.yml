@@ -1,0 +1,47 @@
+groups:
+  - name: nebula
+    rules:
+      - alert: NebulaGraphDown
+        expr: up{job=~"nebula-.*"} == 0
+        for: 30s
+        labels:
+          severity: critical
+        annotations:
+          summary: "NebulaGraph instance is down"
+          description: "NebulaGraph instance {{ $labels.job }} at {{ $labels.instance }} is down"
+
+      - alert: NebulaGraphHighSessionUsage
+        expr: (nebula_graphd_session_count / nebula_graphd_session_max_count) * 100 > 80
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "NebulaGraph session usage is high"
+          description: "NebulaGraph session usage is {{ $value }}% at {{ $labels.instance }}"
+
+      - alert: NebulaGraphStorageServiceDown
+        expr: up{job="nebula-storaged"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "NebulaGraph storage service is down"
+          description: "NebulaGraph storage service at {{ $labels.instance }} is down"
+
+      - alert: NebulaGraphMetaServiceDown
+        expr: up{job="nebula-metad"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "NebulaGraph meta service is down"
+          description: "NebulaGraph meta service at {{ $labels.instance }} is down"
+
+      - alert: NebulaGraphHighQueryLatency
+        expr: rate(nebula_graphd_query_latency_us_sum[5m]) / rate(nebula_graphd_query_latency_us_count[5m]) > 1000000
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "NebulaGraph query latency is high"
+          description: "NebulaGraph average query latency is {{ $value }}μs at {{ $labels.instance }}"

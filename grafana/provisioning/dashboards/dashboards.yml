@@ -11,19 +11,29 @@ providers:
     options:
       path: /etc/grafana/provisioning/dashboards
   
-  - name: 'semgrep'
+  - name: 'nebula'
     orgId: 1
-    folder: 'Semgrep'
+    folder: 'NebulaGraph'
     type: file
     disableDeletion: false
     updateIntervalSeconds: 10
     allowUiUpdates: true
     options:
       path: /etc/grafana/dashboards
-   
-  - name: 'treesitter'
+  
+  - name: 'redis'
     orgId: 1
-    folder: 'Tree-sitter'
+    folder: 'Redis'
+    type: file
+    disableDeletion: false
+    updateIntervalSeconds: 10
+    allowUiUpdates: true
+    options:
+      path: /etc/grafana/dashboards
+  
+  - name: 'qdrant'
+    orgId: 1
+    folder: 'Qdrant'
     type: file
     disableDeletion: false
     updateIntervalSeconds: 10

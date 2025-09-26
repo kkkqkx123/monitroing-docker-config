@@ -1,2 +1,254 @@
 apiVersion: 1
-groups: []
+groups:
+  # Redis告警组
+  - orgId: 1
+    name: redis-alerts
+    folder: Database Alerts
+    interval: 30s
+    rules:
+      - uid: redis-down-alert
+        title: Redis Service Down
+        condition: A
+        data:
+          - refId: A
+            datasourceUid: prometheus
+            model:
+              expr: redis_up == 0
+              refId: A
+              intervalMs: 1000
+              maxDataPoints: 43200
+              range: true
+              timeRange:
+                from: now-5m
+                to: now
+        for: 30s
+        noDataState: Alerting
+        execErrState: Alerting
+        labels:
+          severity: critical
+          service: redis
+          database: redis
+        annotations:
+          summary: "Redis service is down"
+          description: "Redis instance at {{ $labels.instance }} is not responding"
+          runbook_url: "https://example.com/runbooks/redis-down"
+
+      - uid: redis-high-memory-usage
+        title: Redis High Memory Usage
+        condition: A
+        data:
+          - refId: A
+            datasourceUid: prometheus
+            model:
+              expr: (redis_memory_used_bytes / redis_memory_max_bytes) * 100 > 80
+              refId: A
+              intervalMs: 1000
+              maxDataPoints: 43200
+              range: true
+              timeRange:
+                from: now-5m
+                to: now
+        for: 5m
+        noDataState: NoData
+        execErrState: Alerting
+        labels:
+          severity: warning
+          service: redis
+          database: redis
+        annotations:
+          summary: "Redis memory usage is high"
+          description: "Redis memory usage is {{ $value }}% at {{ $labels.instance }}"
+
+      - uid: redis-high-connections
+        title: Redis High Connection Count
+        condition: A
+        data:
+          - refId: A
+            datasourceUid: prometheus
+            model:
+              expr: redis_connected_clients > 100
+              refId: A
+              intervalMs: 1000
+              maxDataPoints: 43200
+              range: true
+              timeRange:
+                from: now-5m
+                to: now
+        for: 5m
+        noDataState: NoData
+        execErrState: Alerting
+        labels:
+          severity: warning
+          service: redis
+          database: redis
+        annotations:
+          summary: "Redis connection count is high"
+          description: "Redis has {{ $value }} active connections at {{ $labels.instance }}"
+
+  # NebulaGraph告警组
+  - orgId: 1
+    name: nebula-alerts
+    folder: Database Alerts
+    interval: 30s
+    rules:
+      - uid: nebula-service-down
+        title: NebulaGraph Service Down
+        condition: A
+        data:
+          - refId: A
+            datasourceUid: prometheus
+            model:
+              expr: up{job=~"nebula.*"} == 0
+              refId: A
+              intervalMs: 1000
+              maxDataPoints: 43200
+              range: true
+              timeRange:
+                from: now-5m
+                to: now
+        for: 30s
+        noDataState: Alerting
+        execErrState: Alerting
+        labels:
+          severity: critical
+          service: nebula
+          database: nebula
+        annotations:
+          summary: "NebulaGraph service is down"
+          description: "NebulaGraph service {{ $labels.job }} at {{ $labels.instance }} is not responding"
+
+      - uid: nebula-high-session-usage
+        title: NebulaGraph High Session Usage
+        condition: A
+        data:
+          - refId: A
+            datasourceUid: prometheus
+            model:
+              expr: nebula_num_sessions / nebula_max_sessions > 0.7
+              refId: A
+              intervalMs: 1000
+              maxDataPoints: 43200
+              range: true
+              timeRange:
+                from: now-5m
+                to: now
+        for: 5m
+        noDataState: NoData
+        execErrState: Alerting
+        labels:
+          severity: warning
+          service: nebula
+          database: nebula
+        annotations:
+          summary: "NebulaGraph session usage is high"
+          description: "NebulaGraph session usage is {{ $value }}%, over 70% threshold"
+
+      - uid: nebula-session-limit-reached
+        title: NebulaGraph Session Limit Reached
+        condition: A
+        data:
+          - refId: A
+            datasourceUid: prometheus
+            model:
+              expr: nebula_num_sessions >= nebula_max_sessions
+              refId: A
+              intervalMs: 1000
+              maxDataPoints: 43200
+              range: true
+              timeRange:
+                from: now-5m
+                to: now
+        for: 2m
+        noDataState: Alerting
+        execErrState: Alerting
+        labels:
+          severity: critical
+          service: nebula
+          database: nebula
+        annotations:
+          summary: "NebulaGraph session limit reached"
+          description: "NebulaGraph active sessions have reached the maximum limit of {{ $value }}"
+
+  # Qdrant告警组
+  - orgId: 1
+    name: qdrant-alerts
+    folder: Database Alerts
+    interval: 30s
+    rules:
+      - uid: qdrant-service-down
+        title: Qdrant Service Down
+        condition: A
+        data:
+          - refId: A
+            datasourceUid: prometheus
+            model:
+              expr: up{job="qdrant"} == 0
+              refId: A
+              intervalMs: 1000
+              maxDataPoints: 43200
+              range: true
+              timeRange:
+                from: now-5m
+                to: now
+        for: 30s
+        noDataState: Alerting
+        execErrState: Alerting
+        labels:
+          severity: critical
+          service: qdrant
+          database: qdrant
+        annotations:
+          summary: "Qdrant service is down"
+          description: "Qdrant service at {{ $labels.instance }} is not responding"
+
+      - uid: qdrant-high-collection-count
+        title: Qdrant High Collection Count
+        condition: A
+        data:
+          - refId: A
+            datasourceUid: prometheus
+            model:
+              expr: collections_total > 100
+              refId: A
+              intervalMs: 1000
+              maxDataPoints: 43200
+              range: true
+              timeRange:
+                from: now-5m
+                to: now
+        for: 10m
+        noDataState: NoData
+        execErrState: Alerting
+        labels:
+          severity: warning
+          service: qdrant
+          database: qdrant
+        annotations:
+          summary: "Qdrant collection count is high"
+          description: "Qdrant has {{ $value }} collections, which may impact performance"
+
+      - uid: qdrant-high-vector-dimensions
+        title: Qdrant High Vector Dimensions
+        condition: A
+        data:
+          - refId: A
+            datasourceUid: prometheus
+            model:
+              expr: avg_vector_dimension > 1000
+              refId: A
+              intervalMs: 1000
+              maxDataPoints: 43200
+              range: true
+              timeRange:
+                from: now-5m
+                to: now
+        for: 5m
+        noDataState: NoData
+        execErrState: Alerting
+        labels:
+          severity: warning
+          service: qdrant
+          database: qdrant
+        annotations:
+          summary: "Qdrant vector dimensions are high"
+          description: "Average vector dimension is {{ $value }}, which may impact memory usage"

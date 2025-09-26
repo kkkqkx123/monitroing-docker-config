@@ -1,0 +1,38 @@
+groups:
+  - name: qdrant
+    rules:
+      - alert: QdrantDown
+        expr: up{job="qdrant"} == 0
+        for: 30s
+        labels:
+          severity: critical
+        annotations:
+          summary: "Qdrant instance is down"
+          description: "Qdrant instance at {{ $labels.instance }} is down"
+
+      - alert: QdrantHighMemoryUsage
+        expr: (qdrant_memory_usage_bytes / qdrant_memory_total_bytes) * 100 > 85
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Qdrant memory usage is high"
+          description: "Qdrant memory usage is {{ $value }}% at {{ $labels.instance }}"
+
+      - alert: QdrantCollectionCountHigh
+        expr: qdrant_collections_total > 1000
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Qdrant collection count is high"
+          description: "Qdrant has {{ $value }} collections at {{ $labels.instance }}"
+
+      - alert: QdrantVectorOperationsSlow
+        expr: rate(qdrant_vector_operations_duration_seconds_sum[5m]) / rate(qdrant_vector_operations_duration_seconds_count[5m]) > 1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Qdrant vector operations are slow"
+          description: "Qdrant vector operations average duration is {{ $value }}s at {{ $labels.instance }}"

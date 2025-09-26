@@ -9,8 +9,14 @@ datasources:
     editable: true
     jsonData:
       httpMethod: POST
-      timeInterval: 30s
+      timeInterval: 15s
       queryTimeout: 60s
       customQueryParameters: ""
+      manageAlerts: true
+      prometheusType: Prometheus
+      prometheusVersion: 2.40.0
+      cacheLevel: 'High'
+      disableRecordingRules: false
+      incrementalQueryOverlapWindow: 10m
     secureJsonData: {}
     version: 1

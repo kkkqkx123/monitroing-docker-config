@@ -1,83 +1,67 @@
 global:
   scrape_interval: 15s
   evaluation_interval: 15s
+  external_labels:
+    monitor: 'docker-compose-monitoring'
+    environment: 'development'
 
 rule_files:
   - "alerts/*.yml"
-  - "redis-alert-rules.yml"
 
 scrape_configs:
-  - job_name: 'codebase-index'
-    static_configs:
-      - targets: ['host.docker.internal:3010']
-    metrics_path: '/api/v1/monitoring/prometheus'
-    scrape_interval: 30s
-    scrape_timeout: 10s
-    honor_labels: true
 
-  - job_name: 'codebase-index-semgrep'
-    static_configs:
-      - targets: ['host.docker.internal:3010']
-    metrics_path: '/api/v1/monitoring/prometheus'
-    scrape_interval: 30s
-    scrape_timeout: 10s
-    honor_labels: true
-    params:
-      collect: ['semgrep']
-
-  - job_name: 'codebase-index-treesitter'
-    static_configs:
-      - targets: ['host.docker.internal:3010']
-    metrics_path: '/api/v1/monitoring/prometheus'
-    scrape_interval: 30s
-    scrape_timeout: 10s
-    honor_labels: true
-    params:
-      collect: ['treesitter']
-
+  # Qdrant Vector Database
   - job_name: 'qdrant'
     static_configs:
       - targets: ['host.docker.internal:6333']
     metrics_path: '/metrics'
     scrape_interval: 30s
+    scrape_timeout: 10s
+    honor_labels: true
 
-  - job_name: 'nebula-graph-stats'
+  # NebulaGraph Stats Exporter
+  - job_name: 'nebula-stats-exporter'
     static_configs:
-      - targets: ['nebula-stats-exporter:9100']
+      - targets: ['host.docker.internal:9100']
     metrics_path: '/metrics'
     scrape_interval: 30s
     scrape_timeout: 10s
     honor_labels: true
 
-  # NebulaGraph services are monitored through nebula-stats-exporter
-  # Direct access to /stats endpoint is removed as it returns JSON format
-  # which is incompatible with Prometheus expectations
-
-  # Project-level monitoring configuration (through file discovery)
-  - job_name: 'qdrant-projects'
-    file_sd_configs:
-      - files:
-          - '/etc/prometheus/qdrant-projects.json'
-    metrics_path: '/metrics'  # Qdrant's standard monitoring endpoint
-    scrape_interval: 60s
-    relabel_configs:
-      - source_labels: [__address__]
-        target_label: instance
-      - source_labels: [__meta_filepath]
-        regex: '.*project-(.*)\.json'
-        target_label: project_id
-
-  - job_name: 'nebula-projects'
-    file_sd_configs:
-      - files:
-          - '/etc/prometheus/nebula-projects.json'
-    scrape_interval: 60s
-
+  # Redis Exporter
   - job_name: 'redis'
     static_configs:
       - targets: ['host.docker.internal:9121']
     metrics_path: '/metrics'
     scrape_interval: 15s
+    scrape_timeout: 10s
+
+  # NebulaGraph Meta Services
+  - job_name: 'nebula-metad'
+    static_configs:
+      - targets: ['host.docker.internal:19559', 'host.docker.internal:19560', 'host.docker.internal:19561']
+    metrics_path: '/metrics'
+    scrape_interval: 30s
+    scrape_timeout: 15s
+    honor_labels: true
+
+  # NebulaGraph Storage Services  
+  - job_name: 'nebula-storaged'
+    static_configs:
+      - targets: ['host.docker.internal:19779', 'host.docker.internal:19780', 'host.docker.internal:19781']
+    metrics_path: '/metrics'
+    scrape_interval: 30s
+    scrape_timeout: 15s
+    honor_labels: true
+
+  # NebulaGraph Graph Service
+  - job_name: 'nebula-graphd'
+    static_configs:
+      - targets: ['host.docker.internal:19669']
+    metrics_path: '/metrics'
+    scrape_interval: 30s
+    scrape_timeout: 15s
+    honor_labels: true
 
 alerting:
   alertmanagers:
