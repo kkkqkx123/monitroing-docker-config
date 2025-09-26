@@ -1,0 +1,55 @@
+# 监控服务 Docker 部署脚本 - WSL环境
+# 在Windows宿主机上执行这些命令，它们会自动在WSL中运行
+
+# 1. 进入WSL中的项目目录
+wsl -e bash -cl "cd /home/docker-compose/monitoring && pwd"
+
+# 2. 处理脚本乱码问题（如果需要）
+wsl -e bash -cl "cd /home/docker-compose/monitoring && sed -i 's/\r$//' *.sh"
+
+# 3. 启动监控服务
+wsl -e bash -cl "cd /home/docker-compose/monitoring && docker-compose -f docker-compose.monitoring.yml up -d"
+
+# 4. 等待服务启动（建议等待10秒）
+timeout /t 10 /nobreak
+
+# 5. 检查服务状态
+wsl -e bash -cl "cd /home/docker-compose/monitoring && docker-compose -f docker-compose.monitoring.yml ps"
+
+# 6. 验证Prometheus指标
+# 在浏览器访问 http://localhost:9090/targets 或使用curl
+wsl -e bash -cl "cd /home/docker-compose/monitoring && curl -s http://localhost:9090/api/v1/targets | head -20"
+
+# 7. 验证Grafana访问
+# 在浏览器访问 http://localhost:3100
+# 默认用户名: admin, 密码见 .env 文件中的 GRAFANA_ADMIN_PASSWORD
+
+# 8. 验证Alertmanager
+# 在浏览器访问 http://localhost:9093
+
+# 9. 查看实时日志
+wsl -e bash -cl "cd /home/docker-compose/monitoring && docker-compose -f docker-compose.monitoring.yml logs -f"
+
+# 10. 重启服务
+wsl -e bash -cl "cd /home/docker-compose/monitoring && docker-compose -f docker-compose.monitoring.yml down && docker-compose -f docker-compose.monitoring.yml up -d"
+
+# 11. 停止服务
+wsl -e bash -cl "cd /home/docker-compose/monitoring && docker-compose -f docker-compose.monitoring.yml down"
+
+# 12. 验证配置文件
+# 验证Prometheus配置
+wsl -e bash -cl "cd /home/docker-compose/monitoring && docker run --rm -v \$(pwd)/prometheus.yml:/etc/prometheus/prometheus.yml prom/prometheus promtool check config /etc/prometheus/prometheus.yml"
+
+# 验证告警规则
+wsl -e bash -cl "cd /home/docker-compose/monitoring && docker run --rm -v \$(pwd)/alerts:/etc/prometheus/alerts prom/prometheus promtool check rules /etc/prometheus/alerts/*.yml"
+
+# 13. 查看特定服务日志
+wsl -e bash -cl "cd /home/docker-compose/monitoring && docker-compose -f docker-compose.monitoring.yml logs -f prometheus"
+wsl -e bash -cl "cd /home/docker-compose/monitoring && docker-compose -f docker-compose.monitoring.yml logs -f grafana"
+wsl -e bash -cl "cd /home/docker-compose/monitoring && docker-compose -f docker-compose.monitoring.yml logs -f alertmanager"
+
+# 14. 检查磁盘使用情况
+wsl -e bash -cl "cd /home/docker-compose/monitoring && docker system df"
+
+# 15. 清理无用资源（谨慎使用）
+wsl -e bash -cl "cd /home/docker-compose/monitoring && docker system prune -f"
